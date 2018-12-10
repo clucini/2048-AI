@@ -1,5 +1,6 @@
 import random
 
+
 class Board:
     def __init__(self):
         self.tiles = []
@@ -50,9 +51,10 @@ class Board:
 
     def move(self, dir):
         if self.endGame():
-            return False
+            return 'over'
         if not self.checkMove(dir):
             print("Invalid move")
+            return 'invalid'
         else:
             board = self
             if dir == 1:
@@ -75,7 +77,6 @@ class Board:
             for y in range(0, len(board.tiles)):
                 board.tiles[y] = list(filter(lambda a: a != 0, board.tiles[y]))
 
-
             for row in board.tiles:
                 for i in range(0, 4 -len(row)):
                     row.append(0)
@@ -91,13 +92,20 @@ class Board:
             self.tiles = board.tiles
             self.print()
             print("-----------")
-        return True
+        return 'good'
 
     def endGame(self):
         if not self.checkMove(0) and not self.checkMove(1) and not self.checkMove(2) and not self.checkMove(3):
             print("GameOver")
             return True
         return False
+
+    def score(self):
+        sum = 0
+        for row in range (len(self.tiles)):
+            for col in range(len(self.tiles[row])):
+                sum += self.tiles[row][col]
+        return sum
 
 
 def rotateBoard(board, num = 1):
@@ -109,10 +117,4 @@ def rotateBoard(board, num = 1):
             rBoard = newBoard
         return rBoard
 
-def gameLoop(board):
-    a = input("Move: ")
-    if int(a) not in [0,1,2,3]:
-        print("Invalid move")
-    else:
-        board.move(int(a))
 
