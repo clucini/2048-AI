@@ -49,11 +49,12 @@ class Board:
         (i,j) = random.choice([(i,j) for i in range(len(self.tiles)) for j in range(len(self.tiles[0])) if self.tiles[i][j] == 0])
         self.tiles[i][j] = new_element
 
-    def move(self, dir):
+    def move(self, dir, pr = True):
         if self.endGame():
             return 'over'
         if not self.checkMove(dir):
-            print("Invalid move")
+            if pr:
+                print("Invalid move")
             return 'invalid'
         else:
             board = self
@@ -90,8 +91,9 @@ class Board:
 
             board.genTile()
             self.tiles = board.tiles
-            self.print()
-            print("-----------")
+            if pr:
+                self.print()
+                print("-----------")
         return 'good'
 
     def endGame(self):
