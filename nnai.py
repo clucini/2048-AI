@@ -52,7 +52,7 @@ class Layer:
             if self.neurons[i].val > highest:
                 highest = self.neurons[i].val
                 count = i
-        return i
+        return count
 
 class NN:
     def __init__(self, weights = None):
