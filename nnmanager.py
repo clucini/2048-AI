@@ -15,31 +15,42 @@ class Generation:
     def __init__(self):
         self.networks = []
 
-    def genNew(self, count = 20):
+    def genNew(self, count = 20, weights = None):
         for i in range(count):
-            self.networks.append(Network())
+            if weights == None:
+                self.networks.append(Network())
+            else:
+                self.networks.append(Network(weights[i]))
+                
 
-    def evolveNext(self, babies = 10):
+    def evolveNext(self, babies = 0):
         sorted_networks = sorted(self.networks, key=lambda x: x.score, reverse=True)
         fitnesses = list(n.score for n in sorted_networks)
+        print(fitnesses)
+        sorted_networks = sorted_networks[:int(len(sorted_networks)/2)]
+        fitnesses = list(n.score for n in sorted_networks)
         fitness_sum = sum(fitnesses)
-        rel_fitness = [f/fitness_sum for f in fitnesses]
-        probs = [sum(rel_fitness[:i+1]) for i in range(len(rel_fitness))]
+
         new_gen = []
-        for i in range(len(self.networks) - babies):
-            net = sorted_networks[self.randomSelect].saveWeights()
+        new_gen.append(sorted_networks[0].ai.saveWeights())
+        for i in range(len(self.networks)-1 - babies):
+            net = sorted_networks[self.rouletteSelect(fitnesses, fitness_sum)].ai.saveWeights()
             new_gen.append(net)
-
         for i in range(babies):
-            net1 = sorted_networks[self.randomSelect].saveWeights()
-            net2 = sorted_networks[self.randomSelect].saveWeights()
+            net1 = sorted_networks[self.rouletteSelect(fitnesses, fitness_sum)].ai.saveWeights()
+            net2 = sorted_networks[self.rouletteSelect(fitnesses, fitness_sum)].ai.saveWeights()
             new_gen.append(self.breed(net1, net2))
+        return new_gen
+        
 
-    def randomSelect(self, probs):
-        rand = random.random() 
-        for f in range(len(probs)):
-            if rand < probs[f]:
-                return f
+    def rouletteSelect(self, fitnesses, sums):
+        rand = random.randint(0,sums)
+        total = fitnesses[0]
+        count = 0
+        while rand > total:
+            count += 1
+            total += fitnesses[count]
+        return count
 
     def breed(self, net1, net2):
         combined = self.combine(self.flatten(net1), self.flatten(net2))
@@ -54,7 +65,7 @@ class Generation:
 
     def mutate(self, net):
         for item in net:
-            if 0.05 > random.random():
+            if 0.02 > random.random():
                 item = 1 - item
         return net
 
@@ -68,33 +79,40 @@ class Generation:
 
     def unflatten(self, l, shape):
         new_list = []
+        count = 0
         for i in range(len(shape)):
-            new_list[i] = []
+            new_list.append([])
             for f in range(len(shape[i])):
-                new_list[i][f] = []
+                new_list[i].append([])
                 for k in range(len(shape[i][f])):
-                    print(str(k + f * len(shape[i][f]) + i * len(shape[i]) * len(shape[i][f])))
-                    new_list[i][f][k] = l[k + f * len(shape[i][f]) + i * len(shape[i]) * len(shape[i][f])]
+                    new_list[i][f].append(l[count])
+                    count += 1
         return new_list
 
 generations = []
 
 generations.append(Generation())
-generations[0].genNew()
+generations[0].genNew(20)
+curGen = 0
+while curGen < 10000:
+    for network in generations[curGen].networks:
+        board = game.Board()
+        game_running = True
+        invalid_count = 0
+        while game_running:
+            if invalid_count > 3:
+                game_running = False
+            inputs = [j for sub in board.tiles for j in sub]
+            inputs.append(invalid_count)
+            game_status = board.move(network.ai.Run(inputs), False)
+            if game_status == 'over':
+                game_running = False
+            elif game_status == 'invalid':
+                invalid_count += 1
+        network.score = board.score()
+    new = generations[curGen].evolveNext()
+    next_Gen = Generation()
+    next_Gen.genNew(len(new), weights=new)
+    generations.append(next_Gen)
+    curGen += 1
 
-for network in generations[0].networks:
-    board = game.Board()
-    game_running = True
-    invalid_count = 0
-    while game_running:
-        if invalid_count > 3:
-            game_running = False
-        inputs = [j for sub in board.tiles for j in sub]
-        game_status = board.move(network.ai.Run(inputs), False)
-        if game_status == 'over':
-            game_running = False
-        elif game_status == 'invalid':
-            invalid_count += 1
-    network.score = board.score()
-
-generations[0].evolveNext()

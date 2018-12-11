@@ -57,8 +57,8 @@ class Layer:
 class NN:
     def __init__(self, weights = None):
         self.layers = []
-        self.layers.append(Layer(16, -1))
-        self.layers.append(Layer(5, 0))
+        self.layers.append(Layer(17, -1))
+        self.layers.append(Layer(10, 0))
         self.layers.append(Layer(4, -1))
         for i in range(0, len(self.layers)-1):
             self.layers[i].setup(self.layers[i+1])
@@ -76,16 +76,16 @@ class NN:
 
     def loadWeights(self, weights):
         for layer in range(len(self.layers)):
-            for neuron in range(len(layer.neurons)):
-                for synapse in range(len(neuron.outSynapses)):
-                    synapse.weight = weights[layer][neuron][synapse]
+            for neuron in range(len(self.layers[layer].neurons)):
+                for synapse in range(len(self.layers[layer].neurons[neuron].outSynapses)):
+                    self.layers[layer].neurons[neuron].outSynapses[synapse].weight = weights[layer][neuron][synapse]
 
     def saveWeights(self):
         weights = []
         for layer in range(len(self.layers)):
-            weights[layer] = []
-            for neuron in range(len(layer.neurons)):
-                weights[layer][neuron] = []
-                for synapse in range(len(neuron.outSynapses)):
-                    weights[layer][neuron][synapse] = synapse.weight
+            weights.append([])
+            for neuron in range(len(self.layers[layer].neurons)):
+                weights[layer].append([])
+                for synapse in self.layers[layer].neurons[neuron].outSynapses:
+                    weights[layer][neuron].append(synapse.weight)
         return weights
